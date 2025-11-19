@@ -1,0 +1,49 @@
+/* 🚀 Buttons */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 
+         px-4 py-2 rounded-lg font-medium shadow-sm 
+         transition-all duration-200 
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+.btn-primary {
+  @apply bg-gradient-to-r from-sky-500 to-indigo-600 text-white 
+         hover:from-sky-600 hover:to-indigo-700;
+}
+.btn-secondary {
+  @apply bg-gray-100 text-gray-800 hover:bg-gray-200;
+}
+.btn-danger {
+  @apply bg-red-500 text-white hover:bg-red-600;
+}
+
+/* 🃏 Cards */
+.card {
+  @apply bg-white rounded-2xl shadow-md border border-gray-100 p-6 
+         transition hover:shadow-lg hover:scale-[1.01];
+}
+
+/* ✍️ Inputs */
+.input {
+  @apply w-full border rounded-lg px-4 py-2 text-sm 
+         focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-sm;
+}
+.input-error {
+  @apply border-red-500 focus:ring-red-400;
+}
+
+/* 🏷️ Badges */
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+}
+.badge-success {
+  @apply bg-green-100 text-green-700;
+}
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-700;
+}
+.badge-danger {
+  @apply bg-red-100 text-red-700;
+}
+.badge-info {
+  @apply bg-sky-100 text-sky-700;
+}

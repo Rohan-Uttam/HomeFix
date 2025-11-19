@@ -1,0 +1,105 @@
+// frontend/src/utils/categories.js
+
+export const CATEGORIES = [
+  {
+    key: "home-maintenance",
+    label: "🏠 Home Maintenance",
+    subcategories: [
+      "Plumber",
+      "Electrician",
+      "Carpenter",
+      "Painter",
+      "AC Technician",
+      "Refrigerator Repair",
+      "Washing Machine Repair",
+      "RO/Water Purifier Technician",
+      "Geyser Repair",
+      "Gas Stove / Chimney Repair",
+      "Pest Control",
+      "Mason / Civil Work",
+    ],
+  },
+  {
+    key: "cleaning-household",
+    label: "🧹 Cleaning & Household",
+    subcategories: [
+      "House Cleaning (Deep Cleaning)",
+      "Bathroom Cleaning",
+      "Kitchen Cleaning",
+      "Sofa / Carpet Cleaning",
+      "Water Tank Cleaning",
+      "Waste Collection / Garbage Disposal",
+      "Laundry / Ironing Services",
+      "Domestic Maid (Cooking / Cleaning)",
+    ],
+  },
+  {
+    key: "beauty-wellness",
+    label: "💇 Beauty & Wellness",
+    subcategories: [
+      "Beautician (Female)",
+      "Hairdresser / Barber",
+      "Makeup Artist",
+      "Spa / Massage Therapist",
+      "Mehendi Artist",
+      "Nail Technician",
+    ],
+  },
+  {
+    key: "transport-driver",
+    label: "🚖 Transport & Driver",
+    subcategories: [
+      "Driver on Demand",
+      "Tempo / Mini Truck for Shifting",
+      "Movers & Packers",
+      "Delivery Boy (Local Delivery)",
+    ],
+  },
+  {
+    key: "personal-care",
+    label: "👶 Personal Care & Support",
+    subcategories: [
+      "Babysitter / Nanny",
+      "Elderly Caregiver",
+      "Patient Attendant",
+      "Cook / Chef",
+      "Pet Care (Dog Walker, Groomer, Trainer)",
+    ],
+  },
+  {
+    key: "education-coaching",
+    label: "📚 Education & Coaching",
+    subcategories: [
+      "Home Tutor (All Subjects)",
+      "Music Teacher (Guitar, Piano, Tabla, etc.)",
+      "Dance Teacher",
+      "Yoga Instructor",
+      "Fitness Trainer",
+    ],
+  },
+  {
+    key: "tech-appliances",
+    label: "💻 Tech & Appliances",
+    subcategories: [
+      "Mobile Repair",
+      "Laptop / Computer Repair",
+      "CCTV Installation & Repair",
+      "Wi-Fi / Networking Technician",
+      "Printer Repair",
+    ],
+  },
+  {
+    key: "outdoor-others",
+    label: "🌳 Outdoor & Others",
+    subcategories: [
+      "Gardener / Mali",
+      "Car Washer",
+      "Bike Mechanic",
+      "Car Mechanic",
+      "Event Helper / Labor",
+      "Security Guard",
+      "Photographer / Videographer",
+      "Tailor / Stitching",
+    ],
+  },
+];

@@ -1,0 +1,367 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../../context/AppContext.jsx";
+import { isEmail, isStrongPassword } from "../../utils/validators.js";
+import Button from "../../components/ui/Button.jsx";
+import Card from "../../components/ui/Card.jsx";
+import toast from "react-hot-toast";
+import { getCurrentLocation } from "../../utils/geocode.js";
+import api from "../../api/axios.js";
+
+export default function WorkerRegisterCustom() {
+  const { register } = useAppContext();
+  const navigate = useNavigate();
+
+  const [categories, setCategories] = useState([]);
+  const [subcats, setSubcats] = useState([]);
+  const [avatar, setAvatar] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "worker",
+    phone: "",
+    category: "",
+    customCategory: "",
+    subcategory: "",
+    skills: "",
+    hourlyRate: "",
+    rateType: "hourly",
+    experience: "",
+    bio: "",
+    availability: "flexible",
+    location: { lat: 0, lng: 0, address: "" },
+  });
+
+  // ✅ handle profile image upload
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatar(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  // ✅ fetch categories
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get("/categories");
+        const cats = res.data.data || [];
+        setCategories([...cats, { key: "other", label: "Other", subcategories: [] }]);
+      } catch (err) {
+        console.error("Categories fetch failed:", err);
+        toast.error("Failed to load categories");
+      }
+    })();
+  }, []);
+
+  // ✅ update subcategories on category change
+  useEffect(() => {
+    if (form.category === "other") {
+      setSubcats([]);
+      setForm((prev) => ({ ...prev, subcategory: "" }));
+    } else {
+      const cat = categories.find((c) => c.key === form.category);
+      setSubcats(cat ? cat.subcategories : []);
+      setForm((prev) => ({ ...prev, subcategory: "" }));
+    }
+  }, [form.category, categories]);
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  // ✅ get current location
+  const handleGetLocation = async () => {
+    if (locLoading) return;
+    setLocLoading(true);
+    try {
+      const loc = await getCurrentLocation();
+      setForm((prev) => ({
+        ...prev,
+        location: { lat: loc.lat, lng: loc.lng, address: loc.address },
+      }));
+      toast.success("📍 Current location captured!");
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch location");
+    } finally {
+      setLocLoading(false);
+    }
+  };
+
+  // ✅ submit registration form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!form.name) return toast.error("Name is required");
+    if (!isEmail(form.email)) return toast.error("Invalid email");
+    if (!isStrongPassword(form.password))
+      return toast.error("Password must be 6+ chars, include number & special char");
+    if (!/^[0-9]{10}$/.test(form.phone))
+      return toast.error("Phone number must be exactly 10 digits");
+    if (!form.hourlyRate || Number(form.hourlyRate) < 50)
+      return toast.error("Rate must be at least ₹50");
+    if (!form.location.address)
+      return toast.error("Address / Location is required");
+
+    if (form.category === "other" && !form.customCategory.trim()) {
+      return toast.error("Custom category required when 'Other' selected");
+    }
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        ...form,
+        category: form.category || "other",
+        customCategory:
+          form.category === "other" ? form.customCategory?.trim() || "" : "",
+        skills: form.skills
+          ? form.skills.split(",").map((s) => s.trim())
+          : [form.subcategory],
+        hourlyRate: Number(form.hourlyRate),
+        experience: Number(form.experience) || 0,
+        location: form.location?.address
+          ? {
+              lat: form.location.lat,
+              lng: form.location.lng,
+              address: form.location.address,
+            }
+          : undefined,
+      };
+
+      const fd = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (key === "location") {
+          fd.append("location", JSON.stringify(value));
+        } else {
+          fd.append(key, value ?? "");
+        }
+      });
+      if (avatar) fd.append("avatar", avatar);
+
+      const result = await register(fd, true);
+      if (result?.email || result?.phone) {
+        toast.success(`🎉 OTP sent to ${result.phone || result.email}`);
+        navigate("/verify-otp", {
+          state: { email: result.email, phone: result.phone },
+        });
+      }
+    } catch (err) {
+      console.error("Worker Register error:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to register worker"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-sky-500 via-purple-500 to-pink-500 px-4 py-12">
+      <Card className="w-full max-w-2xl p-8 shadow-2xl border border-white/20 backdrop-blur-xl bg-white/90 rounded-2xl mt-10 mb-12">
+        <h2 className="text-3xl font-extrabold text-center bg-gradient-to-r from-sky-500 to-pink-500 bg-clip-text text-transparent mb-6">
+          👷 Worker Registration
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Profile Image Upload */}
+          <div className="flex flex-col items-center">
+            <label className="cursor-pointer">
+              <div className="w-28 h-28 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-sky-400 transition">
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="w-28 h-28 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-sm">Choose Photo</span>
+                )}
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+            <p className="mt-2 text-xs text-gray-500">Click above to upload</p>
+          </div>
+
+          {/* Name + Email */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              value={form.name}
+              onChange={handleChange}
+              className="input"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              className="input"
+            />
+          </div>
+
+          {/* Password + Phone */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className="input"
+            />
+            <input
+              type="text"
+              name="phone"
+              placeholder="Phone"
+              value={form.phone}
+              onChange={handleChange}
+              className="input"
+            />
+          </div>
+
+          {/* Category + Subcategory */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className="input"
+            >
+              <option value="">Select Category</option>
+              {categories.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+
+            {form.category === "other" ? (
+              <input
+                type="text"
+                name="customCategory"
+                placeholder="Enter Custom Category"
+                value={form.customCategory}
+                onChange={handleChange}
+                className="input"
+              />
+            ) : (
+              <select
+                name="subcategory"
+                value={form.subcategory}
+                onChange={handleChange}
+                className="input"
+              >
+                <option value="">Select Subcategory</option>
+                {subcats.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Address */}
+          <input
+            type="text"
+            placeholder="Workshop / Shop Address"
+            value={form.location.address}
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                location: { ...prev.location, address: e.target.value },
+              }))
+            }
+            className="input"
+          />
+
+          <Button
+            type="button"
+            onClick={handleGetLocation}
+            variant="secondary"
+            className="w-full py-2 text-sm font-medium hover:scale-[1.01] transition-transform"
+            disabled={locLoading}
+          >
+            {locLoading ? "⏳ Fetching location..." : "📍 Use Current Location"}
+          </Button>
+
+          {/* Rate + Type */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              type="number"
+              name="hourlyRate"
+              placeholder="Rate (₹)"
+              value={form.hourlyRate}
+              onChange={handleChange}
+              className="input"
+            />
+            <select
+              name="rateType"
+              value={form.rateType}
+              onChange={handleChange}
+              className="input"
+            >
+              <option value="hourly">Hourly</option>
+              <option value="daily">Daily</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+
+          {/* Experience + Bio */}
+          <input
+            type="number"
+            name="experience"
+            placeholder="Experience (years)"
+            value={form.experience}
+            onChange={handleChange}
+            className="input"
+          />
+          <textarea
+            name="bio"
+            placeholder="Short bio"
+            value={form.bio}
+            onChange={handleChange}
+            rows={3}
+            className="input"
+          ></textarea>
+
+          {/* Availability */}
+          <select
+            name="availability"
+            value={form.availability}
+            onChange={handleChange}
+            className="input"
+          >
+            <option value="full-time">Full-time</option>
+            <option value="part-time">Part-time</option>
+            <option value="weekends">Weekends</option>
+            <option value="flexible">Flexible</option>
+          </select>
+
+          {/* Submit */}
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full py-3 text-lg font-semibold shadow-lg bg-gradient-to-r from-sky-500 to-pink-500 text-white rounded-lg hover:opacity-90 hover:scale-[1.02] transition-transform"
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register as Worker"}
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+}
